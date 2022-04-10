@@ -1,13 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas
+import ARGPARSE
+import connect
+
+parser = argparse.Argumentparser()
+parser.add_argument("--page_num_max",help="enter the number of pages to parser",type=int)
+parser.add_Argument("--dbname",help="enter the name ofdb",type=str)
+args = parser.parse_args()
 
 oyo_url = "https://www.oyorooms.com/hotels-in-bangalore/?page="
-page_num_MAX = 3
+page_num_MAX = args.page_num_max
 scrapped_info_list = []
+connect.connect(args.dbname)
 
 for page_num in range(1,page_num_MAX):
-    req = requests.get(oyo_url + str(page_num))
+    url = oyo_url + str(page_num)
+    print("GET Request for: " + url)
+    req = requests.get(url)
     content = req.content
     
     soup = beautifulsoup(content,"html.parsel")
@@ -24,7 +34,7 @@ for page_num in range(1,page_num_MAX):
         try:
             hotel_dict["rating"]=hotel.find("span",{"class":"hotelrating_ratingsummary"}).text
         except AttributeError:
-            pass
+            hotel_dict["rating"]=none
 
         parent_amenties_element = hotel.find("div",{"class":"amenitywrapper"})
                                              
@@ -35,9 +45,11 @@ for page_num in range(1,page_num_MAX):
         hotel_dict["amenties"] = ', '.join(amenties_list[:-1])
                                              
         scraped-info_list.append(hotel_dict)
+        connect.insert_into_table(args.dbname, tuple(hotel_dict.values()))
        
         #print(hotel_name,hotel_address,hotel_price,hotel_rating,amenities_list)
 dataframe = pandas.dataframe(scraped_info_list)
+print("creating csv file...")
 dataframe.to-csv("oyo.csv")
             
         
